@@ -1,3 +1,4 @@
+import 'package:bytebank/components/transaction_auth_dialog.dart';
 import 'package:bytebank/http/webclients/transaction_webclient.dart';
 import 'package:bytebank/models/contacts.dart';
 import 'package:flutter/material.dart';
@@ -61,15 +62,20 @@ class _TransactionFormState extends State<TransactionForm> {
                   width: double.maxFinite,
                   child: ElevatedButton(
                     child: const Text('Transfer'),
-                    onPressed: () {
+                    onPressed: () async {
                       double? value = double.tryParse(_valueController.text);
-                      if (value != null) {
-                        final transactionCreated =
-                            Transaction(value, widget.contact);
-                        _webClient.save(transactionCreated).then((transaction) {
-                          Navigator.pop(context);
-                        });
-                      }
+
+                      await showDialog(
+                          context: context,
+                          builder: (contextDialog) {
+                            return TransactionAuthDialog(
+                              onConfirm: (String password) {
+                                if (value != null) {
+                                  _save(value, password, context);
+                                }
+                              },
+                            );
+                          });
                     },
                   ),
                 ),
@@ -79,5 +85,19 @@ class _TransactionFormState extends State<TransactionForm> {
         ),
       ),
     );
+  }
+
+  void _save(double value, String password, BuildContext context) {
+    final transactionCreated = Transaction(value, widget.contact);
+    _webClient
+        .save(
+      transactionCreated,
+      password,
+    )
+        .then((transaction) {
+      Navigator.pop(context);
+    }).catchError((e) {
+      debugPrint(e);
+    });
   }
 }

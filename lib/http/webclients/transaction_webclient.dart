@@ -18,7 +18,7 @@ class TransactionWebClient {
   }
 
   //
-  Future<Transaction> save(Transaction transaction) async {
+  Future<Transaction> save(Transaction transaction, String password) async {
     // Converte a transacion para um Map
     Map<String, dynamic> transactionMap = transaction.toJson();
     // Depois para um json
@@ -26,9 +26,21 @@ class TransactionWebClient {
 
     final http.Response response = await client.post(
       Uri.parse(baseURL),
-      headers: {'Content-type': 'application/json', 'password': '1000'},
+      headers: {'Content-type': 'application/json', 'password': password},
       body: transactionJson,
     );
+    // Lidando com os erros (conhecidos e desconhecidos)
+    if (response.statusCode != 200) {
+      switch (response.statusCode) {
+        case 400:
+          throw ('there was an error submitting transaction');
+        case 401:
+          throw ('authentication failed');
+        default:
+          throw ('unknown error');
+      }
+    }
+
     return Transaction.fromJson(jsonDecode(response.body));
   }
 }
