@@ -4,6 +4,11 @@ import 'package:http/http.dart' as http;
 import '../../models/transaction.dart';
 
 class TransactionWebClient {
+  static final Map<int, String> httpErrorMap = {
+    400: 'there was an error submitting transaction',
+    401: 'authentication failed',
+  };
+
   // Recupera todas as transações
   Future<List<Transaction>> findAll() async {
     // Chamada para recuperar todos os dados de transferencias
@@ -31,16 +36,18 @@ class TransactionWebClient {
     );
     // Lidando com os erros (conhecidos e desconhecidos)
     if (response.statusCode != 200) {
-      switch (response.statusCode) {
-        case 400:
-          throw ('there was an error submitting transaction');
-        case 401:
-          throw ('authentication failed');
-        default:
-          throw ('unknown error');
-      }
+      _throwHttpError(response.statusCode);
     }
 
     return Transaction.fromJson(jsonDecode(response.body));
+  }
+
+  void _throwHttpError(int statusCode) {
+    // Lidando com os erros (conhecidos e desconhecidos)
+    if (TransactionWebClient.httpErrorMap.containsKey(statusCode)) {
+      throw Exception(TransactionWebClient.httpErrorMap[statusCode]);
+    } else {
+      throw Exception('Unknown Error');
+    }
   }
 }
