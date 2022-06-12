@@ -12,9 +12,7 @@ class TransactionWebClient {
   // Recupera todas as transações
   Future<List<Transaction>> findAll() async {
     // Chamada para recuperar todos os dados de transferencias
-    final http.Response response = await client.get(Uri.parse(baseURL)).timeout(
-          const Duration(seconds: 5),
-        );
+    final http.Response response = await client.get(Uri.parse(baseURL));
     // Decodificação dos dados JSON
     final List<dynamic> decodedJson = jsonDecode(response.body);
     return decodedJson
@@ -36,18 +34,16 @@ class TransactionWebClient {
     );
     // Lidando com os erros (conhecidos e desconhecidos)
     if (response.statusCode != 200) {
-      _throwHttpError(response.statusCode);
+      throw HttpException(
+          TransactionWebClient.httpErrorMap[response.statusCode] as String);
     }
 
     return Transaction.fromJson(jsonDecode(response.body));
   }
+}
 
-  void _throwHttpError(int statusCode) {
-    // Lidando com os erros (conhecidos e desconhecidos)
-    if (TransactionWebClient.httpErrorMap.containsKey(statusCode)) {
-      throw Exception(TransactionWebClient.httpErrorMap[statusCode]);
-    } else {
-      throw Exception('Unknown Error');
-    }
-  }
+class HttpException implements Exception {
+  final String message;
+
+  const HttpException(this.message);
 }
