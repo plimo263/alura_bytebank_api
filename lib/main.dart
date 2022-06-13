@@ -4,17 +4,6 @@ import 'package:flutter/material.dart';
 import 'screens/dashboard.dart';
 
 void main() {
-  // save(
-  //   Transaction(
-  //     2000,
-  //     Contacts(
-  //       0,
-  //       'Fran',
-  //       1500,
-  //     ),
-  //   ),
-  // ).then((transaction) => debugPrint(transaction.toString()));
-
   runApp(const MyApp());
 }
 

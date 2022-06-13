@@ -7,6 +7,7 @@ class TransactionWebClient {
   static final Map<int, String> httpErrorMap = {
     400: 'there was an error submitting transaction',
     401: 'authentication failed',
+    409: 'Transaction already exist',
   };
 
   // Recupera todas as transações
@@ -34,11 +35,17 @@ class TransactionWebClient {
     );
     // Lidando com os erros (conhecidos e desconhecidos)
     if (response.statusCode != 200) {
-      throw HttpException(
-          TransactionWebClient.httpErrorMap[response.statusCode] as String);
+      throw HttpException(_getErrorMessage(response.statusCode));
     }
 
     return Transaction.fromJson(jsonDecode(response.body));
+  }
+
+  String _getErrorMessage(int statusCode) {
+    if (TransactionWebClient.httpErrorMap.containsKey(statusCode)) {
+      return TransactionWebClient.httpErrorMap[statusCode] as String;
+    }
+    return 'Unknown error';
   }
 }
 

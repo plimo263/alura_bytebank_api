@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:bytebank/components/progress.dart';
 import 'package:bytebank/components/response_dialog.dart';
 import 'package:bytebank/components/transaction_auth_dialog.dart';
 import 'package:bytebank/http/webclients/transaction_webclient.dart';
 import 'package:bytebank/models/contacts.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/transaction.dart';
 
@@ -20,6 +22,8 @@ class TransactionForm extends StatefulWidget {
 class _TransactionFormState extends State<TransactionForm> {
   final TextEditingController _valueController = TextEditingController();
   final TransactionWebClient _webClient = TransactionWebClient();
+  final String uuid = const Uuid().v4();
+  bool _sending = false;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +37,13 @@ class _TransactionFormState extends State<TransactionForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+              Visibility(
+                visible: _sending,
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Progress(message: 'Sending...'),
+                ),
+              ),
               Text(
                 widget.contact.name,
                 style: const TextStyle(
@@ -74,7 +85,7 @@ class _TransactionFormState extends State<TransactionForm> {
                             return TransactionAuthDialog(
                               onConfirm: (String password) {
                                 if (value != null) {
-                                  _save(value, password, context);
+                                  _save(uuid, value, password, context);
                                 }
                               },
                             );
@@ -90,9 +101,17 @@ class _TransactionFormState extends State<TransactionForm> {
     );
   }
 
-  void _save(double value, String password, BuildContext context) async {
-    final transactionCreated = Transaction(value, widget.contact);
-    await _send(transactionCreated, password, context);
+  void _save(String inUuid, double value, String password,
+      BuildContext context) async {
+    final transactionCreated = Transaction(inUuid, value, widget.contact);
+    setState(() {
+      _sending = true;
+    });
+    await _send(transactionCreated, password, context).whenComplete(() {
+      setState(() {
+        _sending = false;
+      });
+    });
 
     _showSuccessfulMessage(context);
   }
