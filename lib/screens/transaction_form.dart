@@ -5,6 +5,7 @@ import 'package:bytebank/components/response_dialog.dart';
 import 'package:bytebank/components/transaction_auth_dialog.dart';
 import 'package:bytebank/http/webclients/transaction_webclient.dart';
 import 'package:bytebank/models/contacts.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
@@ -127,10 +128,25 @@ class _TransactionFormState extends State<TransactionForm> {
   Future<Transaction> _send(
       Transaction transactionCreated, String password, BuildContext context) {
     return _webClient.save(transactionCreated, password).catchError((e) {
+      // Para customizar chaves de erro use o customKey do crashlytics
+      FirebaseCrashlytics.instance
+          .setCustomKey('http_status_code', e.toString());
+      // Firebase registro de erro gravando no crashlytics (erro não fatal já tratado)
+      FirebaseCrashlytics.instance.recordError(e, null);
       _showFailureMessage(context, message: 'timeout submitting transaction');
     }, test: (e) => e is TimeoutException).catchError((e) {
+      // Para customizar chaves de erro use o customKey do crashlytics
+      FirebaseCrashlytics.instance
+          .setCustomKey('http_status_code', e.toString());
+      // Firebase registro de erro gravando no crashlytics (erro não fatal já tratado)
+      FirebaseCrashlytics.instance.recordError(e, null);
       _showFailureMessage(context, message: e.message);
     }, test: (e) => e is HttpException).catchError((e) {
+      // Para customizar chaves de erro use o customKey do crashlytics
+      FirebaseCrashlytics.instance
+          .setCustomKey('http_status_code', e.toString());
+      // Firebase registro de erro gravando no crashlytics (erro não fatal já tratado)
+      FirebaseCrashlytics.instance.recordError(e, null);
       _showFailureMessage(context, message: e.message);
     }, test: (e) => e is Exception);
   }
